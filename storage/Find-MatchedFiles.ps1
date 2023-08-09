@@ -29,14 +29,18 @@ function Search-TextInFiles {
         [Parameter(Mandatory=$true)]
         [string]$SearchPattern
     )
-    $content = Get-Content -Path $Path -ErrorAction Stop
-    $lines = $content | Select-String -Pattern $SearchPattern
-    if ($lines.Count -gt 0) {
-        Write-Host "Found $($lines.Count) lines in $($Path)!"
-        foreach ($line in $lines) {
-            $lineNumber = $line.LineNumber
-            Add-ResultToCsv -Path $Path -Line $lineNumber
+    try {
+        $content = Get-Content -Path $Path -ErrorAction Stop
+        $lines = $content | Select-String -Pattern $SearchPattern
+        if ($lines.Count -gt 0) {
+            Write-Host "Found $($lines.Count) lines in $($Path)!"
+            foreach ($line in $lines) {
+                $lineNumber = $line.LineNumber
+                Add-ResultToCsv -Path $Path -Line $lineNumber
+            }
         }
+    } catch {
+        Write-Host -ForegroundColor Red "Error: $($_.Exception.Message)"
     }
 }
 
@@ -45,19 +49,28 @@ function Find-AllFiles {
         [Parameter(Mandatory=$false)]
         [string]$Path = $PWD,
         [Parameter(Mandatory=$true)]
-        [string]$SearchPattern
+        [string]$SearchPattern,
+        [Parameter(Mandatory=$false)]
+        [string]$ExcludeExtensions = ""
     )
-    $files = Get-ChildItem -Path $Path -Recurse -File -ErrorAction Stop
-    if ($files.Count -eq 0) {
-        Write-Host "No files found in $Path"
-        return
+    try {
+        $files = Get-ChildItem -Path $Path -Recurse -File | Where-Object { $_.Extension -notcontains $ExcludeExtensions }
+        if ($files.Count -eq 0) {
+            Write-Host "No files found in $Path"
+            return
+        }
+        Write-Host "Found $($files.Count) files in $($Path)! Searching for pattern $($SearchPattern)..."
+        foreach ($file in $files) {
+            Search-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern
+        }
     }
-    Write-Host "Found $($files.Count) files in $($Path)! Searching for pattern $($SearchPattern)..."
-    foreach ($file in $files) {
-        Search-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern
+    catch {
+        Write-Host -ForegroundColor Red "Error: $($_.Exception.Message)"
     }
 }
 
 $SearchPath = "C:\"
 $SearchPattern = "bytesentinel"
-Find-AllFiles -Path $SearchPath -SearchPattern $SearchPattern
+# Exclude all images
+$excludedExtensions = @(".jpg", ".png", ".gif", ".bmp", ".mp4", ".avi", ".xlsx", ".docx", ".pdf", ".zip")
+Find-AllFiles -Path $SearchPath -SearchPattern $SearchPattern -ExcludeExtensions $excludedExtensions
