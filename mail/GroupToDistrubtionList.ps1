@@ -11,8 +11,8 @@ function Search-Permissions {
     try {
         # If user is member of the ad group (local), add to distribution list
         $group = Get-ADGroup -Identity $Group -ErrorAction Stop -WarningAction SilentlyContinue
-        $group | Get-ADGroupMember -ErrorAction Stop -WarningAction SilentlyContinue | Where-Object { $_.SamAccountName -eq $LocalUser } | Out-Null
-        if ($?) {
+        $user = Get-ADUser -Identity $LocalUser -Filter { MemberOf -RecursiveMatch $group.DistinguishedName } -ErrorAction Stop -WarningAction SilentlyContinue
+        if ($user) {
             Write-Host -ForegroundColor Green "User $LocalUser is member of group $Group!"
         } else {
             Write-Host -ForegroundColor Red "User $LocalUser is not member of group $Group!"
