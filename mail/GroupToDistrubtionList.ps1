@@ -1,5 +1,6 @@
 Import-Module AzureAD
 
+$LocalUser = $env:USERNAME
 $LocalDomain = ([System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()).Name
 
 function Search-Permissions {
@@ -15,7 +16,7 @@ function Search-Permissions {
             Write-Error -Category ObjectNotFound -Message "Group $($Group) not found in domain $($LocalDomain)!"
         }
         $GroupMembers = Get-ADGroupMember -Identity $GroupId -Recursive | Select-Object -ExpandProperty SamAccountName
-        if ($GroupMembers -contains $env:USERNAME) {
+        if ($LocalUser -in $GroupMembers) {
             Write-Host -ForegroundColor Green "User $($env:USERNAME) is member of group $($Group) in domain $($LocalDomain)!"
         } else {
             Write-Host -ForegroundColor Red "User $($env:USERNAME) is not member of group $($Group) in domain $($LocalDomain)!"
@@ -33,10 +34,10 @@ function Authenticate {
     )
     if ($Domain) {
         Write-Host -ForegroundColor Yellow "Using domain $Domain..."
-        $UserPrincipalName = $env:USERNAME + "@$Domain"
+        $UserPrincipalName = $LocalUser + "@$Domain"
     } else {
         Write-Host -ForegroundColor Yellow "Using local domain..."
-        $UserPrincipalName = $env:USERNAME + "@$LocalDomain"
+        $UserPrincipalName = $LocalUser + "@$LocalDomain"
     }
     # Use the logged on user to authenticate to Azure AD
     Write-Host -ForegroundColor Yellow "Authenticating as $UserPrincipalName to Azure AD..."
