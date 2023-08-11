@@ -9,21 +9,23 @@ function Search-Permissions {
         [string]$Group
     )
     try {
-        $GroupId = (Get-ADGroup -Identity $Group).ObjectGUID
+        $Group = (Get-ADGroup -Identity $Group -ErrorAction Stop)
+        Write-Host $Group.Name
         if ($GroupId) {
-            Write-Host -ForegroundColor Yellow "Group $($Group) found in domain $($LocalDomain)!"
+            Write-Host -ForegroundColor Yellow "Group $($Group.Name) found in domain $LocalDomain!"
         } else {
-            Write-Error -Category ObjectNotFound -Message "Group $($Group) not found in domain $($LocalDomain)!"
+            Write-Error -Category ObjectNotFound -Message "Group $($Group.Name) not found in domain $LocalDomain!"
         }
-        $GroupMembers = Get-ADGroupMember -Identity $GroupId -Recursive | Select-Object -ExpandProperty SamAccountName
+        Write-Host -ForegroundColor Yellow "Checking if user $LocalUser is member of group $($Group.Name) in domain $LocalDomain..."
+        $GroupMembers = Get-ADGroupMember -Identity $($Group.Id) -Recursive
         if ($LocalUser -in $GroupMembers) {
-            Write-Host -ForegroundColor Green "User $($env:USERNAME) is member of group $($Group) in domain $($LocalDomain)!"
+            Write-Host -ForegroundColor Green "User $LocalUser is member of group $Group in domain $LocalDomain!"
         } else {
-            Write-Host -ForegroundColor Red "User $($env:USERNAME) is not member of group $($Group) in domain $($LocalDomain)!"
+            Write-Host -ForegroundColor Red "User $LocalUser is not member of group $Group in domain $LocalDomain!"
         }
     }
     catch {
-        Write-Error -Category ObjectNotFound -Message "Group $($Group) not found in domain $($LocalDomain)!"
+        Write-Error -Category ObjectNotFound -Message "Group $Group not found in domain $LocalDomain!"
     }
 }
 
