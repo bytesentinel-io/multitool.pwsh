@@ -1,5 +1,21 @@
 Import-Module AzureAD
 
+function Search-Permissions {
+    param (
+        [Parameter(Mandatory=$true)]
+        [string]$LocalDomain,
+        [Parameter(Mandatory=$true)]
+        [string]$Group
+    )
+    # Check if user is member of the group in the local domain
+    $GroupMembers = Get-ADGroupMember -Identity $Group -Recursive | Select-Object -ExpandProperty SamAccountName
+    if ($GroupMembers -contains $env:USERNAME) {
+        Write-Host -ForegroundColor Green "User $($env:USERNAME) is member of group $($Group) in domain $($LocalDomain)!"
+    } else {
+        Write-Host -ForegroundColor Red "User $($env:USERNAME) is not member of group $($Group) in domain $($LocalDomain)!"
+    }
+}
+
 function Authenticate {
     param (
         [Parameter(Mandatory=$false)]
@@ -22,6 +38,8 @@ function Authenticate {
     catch {
         Write-Error -Category ConnectionError -Message "Failed to authenticate to Azure AD!"
     }
+    # Check if user is member of the group in the local domain
+    Search-Permissions -LocalDomain $LocalDomain -Group "Domain Admins"
 }
 
 Authenticate -Domain "bytesentinel.io"
