@@ -9,13 +9,13 @@ function Search-Permissions {
         [string]$Group
     )
     try {
-        $Group = Get-ADGroup -Identity $Group -ErrorAction Stop | Select-Object -Property Name, SamAccountName, DistinguishedName, ObjectGUID, MemberOf, Members
-        Write-Host -ForegroundColor Green "Found group $($Group.Name)!"
-        # Check if LocalUser is member of the group
-        if ($Group.Members -contains $LocalUser) {
-            Write-Host -ForegroundColor Green "User $($LocalUser) is member of group $($Group.Name)!"
+        # If user is member of the ad group (local), add to distribution list
+        $group = Get-ADGroup -Identity $Group -ErrorAction Stop -WarningAction SilentlyContinue
+        $group | Get-ADGroupMember -ErrorAction Stop -WarningAction SilentlyContinue | Where-Object { $_.SamAccountName -eq $LocalUser } | Out-Null
+        if ($?) {
+            Write-Host -ForegroundColor Green "User $LocalUser is member of group $Group!"
         } else {
-            Write-Host -ForegroundColor Red "User $($LocalUser) is not member of group $($Group.Name)!"
+            Write-Host -ForegroundColor Red "User $LocalUser is not member of group $Group!"
         }
     }
     catch {
