@@ -10,9 +10,9 @@ function Search-Permissions {
     )
     try {
         # If user is member of the ad group (local), add to distribution list
-        $ResultGroup = Get-ADGroup -Identity $Group -ErrorAction Stop -WarningAction SilentlyContinue | Select-Object -ExpandProperty DistinguishedName
-        $ResultUser = Get-ADUser -Identity $LocalUser -ErrorAction Stop -WarningAction SilentlyContinue | Select-Object -ExpandProperty MemberOf
-        if ($ResultUser -in $ResultGroup) {
+        $ResultGroup = Get-ADGroup -Identity $Group -Properties Members -ErrorAction Stop
+        $ResultUser = Get-ADUser -Identity $LocalUser -ErrorAction Stop | Select-Object -ExpandProperty DistinguishedName
+        if ($ResultGroup.Members -in $ResultUser) {
             Write-Host -ForegroundColor Green "User $LocalUser is member of group $Group!"
         } else {
             Write-Host -ForegroundColor Red "User $LocalUser is not member of group $Group!"
