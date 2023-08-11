@@ -4,7 +4,6 @@ Import-Module AzureAD
 $LocalUser = $env:USERNAME
 $LocalDomain = ([System.DirectoryServices.ActiveDirectory.Domain]::GetCurrentDomain()).Name
 
-
 function Search-Permissions {
     param (
         [Parameter(Mandatory=$true)]
