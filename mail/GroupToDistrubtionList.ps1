@@ -9,19 +9,13 @@ function Search-Permissions {
         [string]$Group
     )
     try {
-        $Group = Get-ADGroup -Identity $Group -ErrorAction Stop | Select-Object -Property Name, SamAccountName, DistinguishedName, ObjectGUID
-        Write-Host $Group.Name
-        if ($GroupId) {
-            Write-Host -ForegroundColor Yellow "Group $($Group.Name) found in domain $LocalDomain!"
+        $Group = Get-ADGroup -Identity $Group -ErrorAction Stop | Select-Object -Property Name, SamAccountName, DistinguishedName, ObjectGUID, MemberOf, Members
+        Write-Host -ForegroundColor Green "Found group $($Group.Name)!"
+        # Check if LocalUser is member of the group
+        if ($Group.Members -contains $LocalUser) {
+            Write-Host -ForegroundColor Green "User $($LocalUser) is member of group $($Group.Name)!"
         } else {
-            Write-Error -Category ObjectNotFound -Message "Group $($Group.Name) not found in domain $LocalDomain!"
-        }
-        Write-Host -ForegroundColor Yellow "Checking if user $LocalUser is member of group $($Group.Name) in domain $LocalDomain..."
-        $GroupMembers = Get-ADGroupMember -Identity $($Group.Id) -Recursive | Select-Object -ExpandProperty SamAccountName
-        if ($LocalUser -in $GroupMembers) {
-            Write-Host -ForegroundColor Green "User $LocalUser is member of group $Group in domain $LocalDomain!"
-        } else {
-            Write-Host -ForegroundColor Red "User $LocalUser is not member of group $Group in domain $LocalDomain!"
+            Write-Host -ForegroundColor Red "User $($LocalUser) is not member of group $($Group.Name)!"
         }
     }
     catch {
