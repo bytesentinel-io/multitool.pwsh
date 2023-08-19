@@ -88,7 +88,7 @@ function Find-AllFiles {
         Write-Host "Found $($files.Count) files in $($Path)! Searching for pattern $($SearchPattern)..."
         foreach ($file in $files) {
             # Search-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern
-            # Replace-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern -ReplacePattern "\\igus.net"
+            # Replace-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern -ReplacePattern "test"
         }
     }
     catch {
