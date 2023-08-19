@@ -80,13 +80,19 @@ function Find-AllFiles {
         [array]$ExcludeExtensions = ""
     )
     try {
-        $files = Get-ChildItem -Path $Path -Recurse -File | Where-Object { $_.Extension -notcontains $ExcludeExtensions }
+        $files = Get-ChildItem -Path $Path -Recurse -File
+        if ($ExcludeExtensions.Count -gt 0) {
+            $files = $files | Where-Object { $ExcludeExtensions -notcontains $_.Extension }
+        }
         if ($files.Count -eq 0) {
             Write-Host "No files found in $Path"
             return
         }
         Write-Host "Found $($files.Count) files in $($Path)! Searching for pattern $($SearchPattern)..."
         foreach ($file in $files) {
+            if ($file.Extension -in $ExcludeExtensions) {
+                continue
+            }
             # Search-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern
             # Replace-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern -ReplacePattern "test"
         }
@@ -99,5 +105,5 @@ function Find-AllFiles {
 $SearchPath = "C:\"
 $SearchPattern = "bytesentinel"
 # Exclude all images
-$excludedExtensions = @(".jpg", ".png", ".gif", ".bmp", ".mp4", ".avi", ".xlsx", ".docx", ".pdf", ".zip")
+$excludedExtensions = @(".jpg", ".png", ".gif", ".bmp", ".mp4", ".avi", ".xlsx", ".xls", ".mdb", ".docx", ".pdf", ".zip")
 Find-AllFiles -Path $SearchPath -SearchPattern $SearchPattern -ExcludeExtensions $excludedExtensions
