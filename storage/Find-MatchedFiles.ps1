@@ -44,6 +44,32 @@ function Search-TextInFiles {
     }
 }
 
+function Replace-TextInFiles {
+    param (
+        [Parameter(Mandatory=$false)]
+        [string]$Path = $PWD,
+        [Parameter(Mandatory=$true)]
+        [string]$SearchPattern,
+        [Parameter(Mandatory=$true)]
+        [string]$ReplacePattern
+    )
+    try {
+        $content = Get-Content -Path $Path -ErrorAction Stop
+        $lines = $content | Select-String -Pattern $SearchPattern
+        if ($lines.Count -gt 0) {
+            Write-Host "Found $($lines.Count) lines in $($Path)! Replacing pattern $($SearchPattern) with $($ReplacePattern)..."
+            foreach ($line in $lines) {
+                $lineNumber = $line.LineNumber
+                $newContent = $content -replace $SearchPattern, $ReplacePattern
+                Set-Content -Path $Path -Value $newContent
+                Write-Host "Replaced pattern $($SearchPattern) with $($ReplacePattern) in $($Path) on line $($lineNumber)!"
+            }
+        }
+    } catch {
+        Write-Host -ForegroundColor Red "Error: $($_.Exception.Message)"
+    }
+}
+
 function Find-AllFiles {
     param (
         [Parameter(Mandatory=$false)]
@@ -51,7 +77,7 @@ function Find-AllFiles {
         [Parameter(Mandatory=$true)]
         [string]$SearchPattern,
         [Parameter(Mandatory=$false)]
-        [string]$ExcludeExtensions = ""
+        [array]$ExcludeExtensions = ""
     )
     try {
         $files = Get-ChildItem -Path $Path -Recurse -File | Where-Object { $_.Extension -notcontains $ExcludeExtensions }
@@ -61,7 +87,8 @@ function Find-AllFiles {
         }
         Write-Host "Found $($files.Count) files in $($Path)! Searching for pattern $($SearchPattern)..."
         foreach ($file in $files) {
-            Search-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern
+            # Search-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern
+            # Replace-TextInFiles -Path $file.FullName -SearchPattern $SearchPattern -ReplacePattern "\\igus.net"
         }
     }
     catch {
